@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+data/
+test-output/
+empty-output/
+empty.html
+*.tmp
