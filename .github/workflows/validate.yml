@@ -1,0 +1,33 @@
+name: Offline validation
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check syntax
+        run: python -m compileall -q monitor.py tests
+      - name: Test synthetic cards without network access
+        run: python -m unittest discover -s tests -v
+      - name: Parse synthetic fixture
+        run: python monitor.py --html tests/fixtures/sample.html --output test-output
+      - name: Confirm unknown input fails
+        run: |
+          printf '<html>No cards</html>' > empty.html
+          if python monitor.py --html empty.html --output empty-output; then
+            echo 'Unexpected success for an unrecognized page'
+            exit 1
+          fi
+      - name: Summary
+        run: |
+          echo '### Offline validation only' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Synthetic cards tested. No requests to Avito. Hourly collection disabled. Live advertisements not verified.' >> "$GITHUB_STEP_SUMMARY"
